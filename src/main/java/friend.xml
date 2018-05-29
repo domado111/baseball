@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ldg.mybatis.friend">
+
+	<!-- 친구 요청 -->
+	<insert id="addFriend" parameterType="map">
+		INSERT INTO friends
+		(friend_one,friend_two)
+		VALUES
+		(#{user_num},#{friend_num})
+	</insert>
+
+	<!-- 유저 아이디 조회 -->
+	<select id="selectUser" parameterType="String" resultType="int">
+		select user_num from users where id=#{id}
+	</select>
+	<select id="selectUserInfo" parameterType="int" resultType="user">
+		select * from users where user_num=#{user_num}
+	</select>
+
+	<!-- 친구 요청 수락 -->
+	<update id="confirmFriend" parameterType="map">
+		UPDATE friends
+		SET
+		status=1
+		WHERE
+		(friend_one=#{user_num} OR friend_two=#{user_num})
+		AND
+		(friend_one=#{friend_num} OR friend_two=#{friend_num})
+	</update>
+
+	<!-- 친구 확인 -->
+	<select id="checkFriend" resultType="friend">
+		SELECT
+		friend_one,friend_two,status FROM friends
+		WHERE
+		(friend_one=#{user_num}
+		OR friend_two=#{user_num})
+		AND
+		(friend_one=#{friend_num} OR
+		friend_two=#{friend_num});
+	</select>
+
+	<!-- 유저 정보 -->
+	<select id="getUser" parameterType="String" resultType="user">
+		select *
+		from users where id=#{id}
+	</select>
+
+	<!-- 유저 목록 -->
+	<select id="getUsers" parameterType="String" resultType="user">
+		select *
+		from users where not id=#{id} order by user_num
+	</select>
+
+	<!-- 친구 요청 전송 목록 -->
+	<select id="sendRequest" parameterType="String" resultType="user">
+		select * from users where user_num in 
+		(select f.FRIEND_TWO from users u, friends f where u.id=#{id} and
+		u.user_num=f.FRIEND_ONE and f.status=0)
+	</select>
+
+	<!-- 친구 요청 취소  -->
+	<delete id="cancleRequest" parameterType="map">
+		delete from friends where friend_one=#{user_num} and friend_two=#{friend_num}
+	</delete>
+	
+	<!-- 친구 요청 거절 -->
+	<delete id="rejectRequest" parameterType="map">
+		delete from friends where friend_one=#{friend_num} and friend_two=#{user_num}
+	</delete>
+	
+	<!-- 수신한 친구 요청 목록-->
+	<select id="receiveRequest" parameterType="String" resultType="user">
+		select * from users where user_num in 
+		(select f.FRIEND_ONE from users u, friends f where u.id=#{id} and
+		u.USER_num=f.FRIEND_TWO and f.status=0)
+	</select>
+
+	<!-- 친구 목록 -->
+	<select id="getFriends" parameterType="int" resultType="friend">
+		select * from friends where status=1 and (friend_one=#{user_num} or friend_two=#{user_num})		
+	</select>
+	
+	<!-- 친구 수 -->
+	<select id="friendCount" parameterType="int" resultType="int">
+		select count(*) from friends where status=1 and (friend_one=#{user_num} or friend_two=#{user_num})
+	</select>
+
+	<!-- 친구 찾기  -->
+	<select id="friendSearch" parameterType="map" resultType="user">
+		select * from users where nickname like '%'||#{friendnick}||'%' and grade=1 and id != #{id}
+	</select>
+
+	<!-- 친구 상태 확인 -->
+	<select id="friendCheck" parameterType="map" resultType="int">
+		select nvl(count(*),0) from friends where (FRIEND_ONE=#{user_num} or FRIEND_Two=#{user_num}) and (FRIEND_ONE=#{friend_num} or FRIEND_Two=#{friend_num})
+	</select>
+</mapper>
